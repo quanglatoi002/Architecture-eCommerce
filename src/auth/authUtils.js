@@ -2,7 +2,6 @@
 
 const jwt = require("jsonwebtoken");
 const createTokenPair = async (payload, publicKey, privateKey) => {
-    console.log(payload);
     try {
         //accessToken
         //use privateKey làm mã key
@@ -14,13 +13,13 @@ const createTokenPair = async (payload, publicKey, privateKey) => {
             expiresIn: "7 days",
         });
         //
-        // jwt.verify(accessToken, publicKey, (err, decode) => {
-        //     if (err) {
-        //         console.log("error verify::", err);
-        //     } else {
-        //         console.log("decode verify::", decode);
-        //     }
-        // });
+        jwt.verify(accessToken, publicKey, (err, decode) => {
+            if (err) {
+                console.log("error verify::", err);
+            } else {
+                console.log("decode verify::", decode);
+            }
+        });
         return { accessToken, refreshToken };
     } catch (error) {
         return error;
