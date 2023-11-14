@@ -22,6 +22,10 @@ const RoleShop = {
     ADMIN: "ADMIN",
 };
 class AccessService {
+    static logout = async({ email, password, refreshToken= null }) => {
+        
+    };
+
     /*
         1 - check email in dbs
         2 - match password
