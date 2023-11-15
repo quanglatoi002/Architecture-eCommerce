@@ -55,7 +55,7 @@ const authentication = asyncHandler(async (req, res, next) => {
     const keyStore = await findByUserId(userId);
     if (!keyStore) throw new NotFoundError("Not Found keyStore");
 
-    //3 if mà mà refreshToken
+    //3 if mà user req refreshToken xuống
 
     if (req.headers[HEADER.REFRESHTOKEN]) {
         try {
@@ -86,6 +86,7 @@ const authentication = asyncHandler(async (req, res, next) => {
         if (!userId === decodeUser.userId)
             throw new AuthFailureError("Invalid Userid");
         req.keyStore = keyStore;
+        req.user = decodeUser; // {userId, email}
         return next();
     } catch (error) {
         throw error;

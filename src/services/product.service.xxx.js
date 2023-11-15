@@ -18,6 +18,7 @@ const {
 */
 
 class ProductFactory {
+    //strategy
     static productRegistry = {}; // key-class
 
     static registerProductType(type, classRef) {
@@ -28,6 +29,7 @@ class ProductFactory {
         const productClass = ProductFactory.productRegistry[type]; // lấy ra đc class dựa theo key
         if (!productClass)
             throw new BadRequestError(`Invalid Product Types ${type}`);
+
         return new productClass(payload).createProduct();
     }
 }
