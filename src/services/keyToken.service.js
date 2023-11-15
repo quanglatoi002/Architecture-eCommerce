@@ -33,14 +33,22 @@ class KeyTokenService {
                 options
             );
 
-            return token ? tokens.publicKey : null;
+            return tokens ? tokens.publicKey : null;
         } catch (error) {
             return error;
         }
     };
     static findByUserId = async (userId) => {
         return await keytokenModel
-            .findOne({ user: Types.ObjectId(userId) })
+            .findOne({
+                user: new Types.ObjectId(userId),
+            })
+            .lean();
+    };
+    static remoteKeyById = async (id) => {
+        console.log(id);
+        return await keytokenModel
+            .deleteOne({ _id: new Types.ObjectId(id) })
             .lean();
     };
 }

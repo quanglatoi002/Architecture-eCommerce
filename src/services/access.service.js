@@ -22,8 +22,11 @@ const RoleShop = {
     ADMIN: "ADMIN",
 };
 class AccessService {
-    static logout = async({ email, password, refreshToken= null }) => {
-        
+    static logout = async (keyStore) => {
+        console.log(keyStore);
+        const delKey = await KeyTokenService.remoteKeyById(keyStore._id);
+        console.log(delKey);
+        return delKey;
     };
 
     /*
@@ -48,6 +51,7 @@ class AccessService {
         const publicKey = crypto.randomBytes(64).toString("hex");
         //4.generate tokens
         const { _id: userId } = foundShop;
+        // tạo accessToken với userId, email cần được mã hóa và chuỗi để mã hóa là privateKey
         const tokens = await createTokenPair(
             {
                 userId,
@@ -107,9 +111,7 @@ class AccessService {
                 privateKey,
             });
 
-            if (!keyStore) {
-                return {};
-            }
+            if (!keyStore) throw new NotFoundError("Not Found keyStore");
             //create token pair
             const tokens = await createTokenPair(
                 {

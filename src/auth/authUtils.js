@@ -15,7 +15,7 @@ const createTokenPair = async (payload, publicKey, privateKey) => {
     try {
         //accessToken
         //use privateKey làm mã key
-        const accessToken = await jwt.sign(payload, privateKey, {
+        const accessToken = await jwt.sign(payload, publicKey, {
             expiresIn: "2 days",
         });
         //refreshToken
@@ -46,18 +46,33 @@ const authentication = asyncHandler(async (req, res, next) => {
         6. OK all => return next()
      */
 
+    //1 lấy userID từ client
     const userId = req.headers[HEADER.CLIENT_ID];
     if (!userId) throw new AuthFailureError("Invalid Request");
 
-    //2
+    //2 tìm findOne với user: userId on model Keys
     const keyStore = await findByUserId(userId);
     if (!keyStore) throw new NotFoundError("Not Found keyStore");
 
     //3
+    //take accessToken
     const accessToken = req.headers[HEADER.AUTHORIZATION];
     if (!accessToken) throw new AuthFailureError("Invalid Request");
+
+    try {
+        //verify token
+        const decodeUser = jwt.verify(accessToken, keyStore.publicKey);
+        console.log(decodeUser);
+        if (!userId === decodeUser.userId)
+            throw new AuthFailureError("Invalid Userid");
+        req.keyStore = keyStore;
+        return next();
+    } catch (error) {
+        throw error;
+    }
 });
 
 module.exports = {
     createTokenPair,
+    authentication,
 };
