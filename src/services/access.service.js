@@ -30,39 +30,20 @@ class AccessService {
         Co => xóa user ra khỏi keyStore
         ko có => tìm kiếm refreshToken
     */
-    static handlerRefreshToken = async (refreshToken) => {
-        console.log(refreshToken);
+    static handlerRefreshToken = async ({ user, keyStore, refreshToken }) => {
         // 1 find refresh token đã được sử dụng trước đó ch?
-        const foundToken = await KeyTokenService.findByRefreshTokenUsed(
-            refreshToken
-        );
+        const { email, userId } = user;
 
-        if (foundToken) {
-            //decode để kiểm tra xem ai đã dùng
-            const { userId, email } = await verifyJWT(
-                refreshToken,
-                foundToken.privateKey
-            );
-            // xóa user ra khỏi keyStore
+        if (keyStore.refreshTokensUsed.includes(refreshToken)) {
             await KeyTokenService.deleteKeyById(userId);
             throw new ForbiddenError(
                 "Something went wrong happened !! Pls relogin"
             );
         }
 
-        // !foundToken
-        const holderToken = await KeyTokenService.findByRefreshToken(
-            refreshToken
-        );
-        console.log(holderToken);
-        if (!holderToken) throw new AuthFailureError("Shop not registered");
+        if (keyStore.refreshToken !== refreshToken)
+            throw new AuthFailureError("Shop not registered");
 
-        //verifyToken
-        const { userId, email } = await verifyJWT(
-            refreshToken,
-            holderToken.privateKey
-        );
-        //check Userid
         const foundShop = await findByEmail({ email });
         if (!foundShop) throw new AuthFailureError("Shop not registered");
 
@@ -72,12 +53,12 @@ class AccessService {
                 userId,
                 email,
             },
-            holderToken.publicKey,
-            holderToken.privateKey
+            keyStore.publicKey,
+            keyStore.privateKey
         );
 
         //update token
-        await holderToken.updateOne({
+        await keyStore.updateOne({
             $set: {
                 refreshToken: tokens.refreshToken,
             },
@@ -86,7 +67,7 @@ class AccessService {
             },
         });
         return {
-            user: { userId, email },
+            user,
             tokens,
         };
     };
