@@ -46,10 +46,25 @@ class KeyTokenService {
             .lean();
     };
     static remoteKeyById = async (id) => {
-        console.log(id);
+        return await keytokenModel.deleteOne({ _id: new Types.ObjectId(id) });
+    };
+
+    static findByRefreshTokenUsed = async (refreshToken) => {
         return await keytokenModel
-            .deleteOne({ _id: new Types.ObjectId(id) })
+            .findOne({
+                refreshTokensUsed: refreshToken,
+            })
             .lean();
+    };
+
+    static findByRefreshToken = async (refreshToken) => {
+        return await keytokenModel.findOne({ refreshToken });
+    };
+
+    static deleteKeyById = async (userId) => {
+        return await keytokenModel.findByIdAndDelete({
+            user: new Types.ObjectId(userId),
+        });
     };
 }
 

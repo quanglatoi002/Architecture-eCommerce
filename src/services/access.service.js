@@ -4,16 +4,19 @@ const shopModel = require("../models/shop.model");
 const bcrypt = require("bcrypt");
 const crypto = require("node:crypto");
 const KeyTokenService = require("./keyToken.service");
-const { createTokenPair } = require("../auth/authUtils");
+const { createTokenPair, verifyJWT } = require("../auth/authUtils");
 const { getInfoData } = require("../utils");
 const {
     BadRequestError,
     ConflictRequestError,
     AuthFailureError,
+    NotFoundError,
+    ForbiddenError,
 } = require("../core/error.response");
 
 //service //
 const { findByEmail } = require("./shop.service");
+const { Types } = require("mongoose");
 
 const RoleShop = {
     SHOP: "SHOP",
@@ -22,13 +25,76 @@ const RoleShop = {
     ADMIN: "ADMIN",
 };
 class AccessService {
-    static logout = async (keyStore) => {
-        console.log(keyStore);
-        const delKey = await KeyTokenService.remoteKeyById(keyStore._id);
-        console.log(delKey);
-        return delKey;
+    /*
+        1. check refreshToken đã có trong refreshTokenUsed
+        Co => xóa user ra khỏi keyStore
+        ko có => tìm kiếm refreshToken
+    */
+    static handlerRefreshToken = async (refreshToken) => {
+        console.log(refreshToken);
+        // 1 find refresh token đã được sử dụng trước đó ch?
+        const foundToken = await KeyTokenService.findByRefreshTokenUsed(
+            refreshToken
+        );
+
+        if (foundToken) {
+            //decode để kiểm tra xem ai đã dùng
+            const { userId, email } = await verifyJWT(
+                refreshToken,
+                foundToken.privateKey
+            );
+            // xóa user ra khỏi keyStore
+            await KeyTokenService.deleteKeyById(userId);
+            throw new ForbiddenError(
+                "Something went wrong happened !! Pls relogin"
+            );
+        }
+
+        // !foundToken
+        const holderToken = await KeyTokenService.findByRefreshToken(
+            refreshToken
+        );
+        console.log(holderToken);
+        if (!holderToken) throw new AuthFailureError("Shop not registered");
+
+        //verifyToken
+        const { userId, email } = await verifyJWT(
+            refreshToken,
+            holderToken.privateKey
+        );
+        //check Userid
+        const foundShop = await findByEmail({ email });
+        if (!foundShop) throw new AuthFailureError("Shop not registered");
+
+        //create lại token mới
+        const tokens = await createTokenPair(
+            {
+                userId,
+                email,
+            },
+            holderToken.publicKey,
+            holderToken.privateKey
+        );
+
+        //update token
+        await holderToken.updateOne({
+            $set: {
+                refreshToken: tokens.refreshToken,
+            },
+            $addToSet: {
+                refreshTokensUsed: refreshToken, // refreshToken đã đc sử dụng để tạo mới
+            },
+        });
+        return {
+            user: { userId, email },
+            tokens,
+        };
     };
 
+    static logout = async (keyStore) => {
+        const delKey = await KeyTokenService.remoteKeyById(keyStore._id);
+        return delKey;
+    };
     /*
         1 - check email in dbs
         2 - match password
