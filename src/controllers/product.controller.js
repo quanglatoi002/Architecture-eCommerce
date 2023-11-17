@@ -20,8 +20,18 @@ class ProductController {
 
     publicProductByShop = async (req, res, next) => {
         new SuccessResponse({
-            message: "Create new Product success!",
+            message: "publishProductByShop success!",
             metadata: await ProductService.publishProductByShop({
+                product_id: req.params.id,
+                product_shop: req.user.userId,
+            }),
+        }).send(res);
+    };
+
+    unPublicProductByShop = async (req, res, next) => {
+        new SuccessResponse({
+            message: "unPublishProductByShop success!",
+            metadata: await ProductService.unPublishProductByShop({
                 product_id: req.params.id,
                 product_shop: req.user.userId,
             }),

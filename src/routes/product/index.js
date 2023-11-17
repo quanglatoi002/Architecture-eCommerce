@@ -15,6 +15,10 @@ router.post(
     "/publish/:id",
     asyncHandler(productController.publicProductByShop)
 );
+router.post(
+    "/unpublish/:id",
+    asyncHandler(productController.unPublicProductByShop)
+);
 
 //QUERY //
 router.get("/drafts/all", asyncHandler(productController.getAllDraftsForShop));
