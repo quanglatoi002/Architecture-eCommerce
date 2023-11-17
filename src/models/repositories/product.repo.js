@@ -17,9 +17,25 @@ const findAllPublishForShop = async ({ query, limit, skip }) => {
     return await queryProduct({ query, limit, skip });
 };
 
+//fulltext search
 const searchProductByUser = async ({ keySearch }) => {
+    //
     const regexSearch = new RegExp(keySearch);
-    const results = await product.find();
+    const results = await product
+        .find(
+            {
+                isPublished: true,
+                $text: { $search: regexSearch },
+            },
+            //sắp xếp cụm từ gần chính xác giá trị search nhất
+            { score: { $meta: "textScore" } }
+        )
+        .sort({
+            score: { $meta: "textScore" },
+        })
+        .lean();
+
+    return results;
 };
 
 const publishProductByShop = async ({ product_shop, product_id }) => {
@@ -70,4 +86,5 @@ module.exports = {
     publishProductByShop,
     findAllPublishForShop,
     unPublishProductByShop,
+    searchProductByUser,
 };

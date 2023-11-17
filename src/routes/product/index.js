@@ -7,6 +7,11 @@ const productController = require("../../controllers/product.controller");
 
 const router = express.Router();
 
+router.get(
+    "/search/:keySearch",
+    asyncHandler(productController.getListSearchProduct)
+);
+
 //authentication//
 router.use(authentication);
 ////////

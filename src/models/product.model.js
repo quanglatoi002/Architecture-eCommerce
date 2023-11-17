@@ -1,5 +1,6 @@
 "use strict";
 
+const { text } = require("express");
 const { Schema, model } = require("mongoose"); // Erase if already required
 const slugify = require("slugify");
 const DOCUMENT_NAME = "Product";
@@ -49,6 +50,8 @@ const productSchema = new Schema(
     }
 );
 
+//create index for search
+productSchema.index({ product_name: "text", product_description: "text" });
 //Document middleware: runs before .save() and .create()
 productSchema.pre("save", function (next) {
     this.product_slug = slugify(this.product_name, { lower: true });
