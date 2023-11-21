@@ -11,8 +11,9 @@ const discountSchema = new Schema(
         discount_name: { type: String, required: true },
         discount_description: { type: String, required: true },
         discount_type: { type: String, default: "fixed_amount" }, // giảm giá theo số tiền
-        discount_value: { type: Number, required: true }, // 10.000d
         discount_code: { type: String, required: true }, // mã giảm giá
+        discount_value: { type: Number, required: true }, // 10.000d
+        discount_max_value: { type: Number, required: true },
         discount_start_date: { type: Date, required: true }, // ngày bd
         discount_end_date: { type: Date, required: true }, // ngày kthuc
         discount_max_uses: { type: Number, required: true }, //so luong discount dc ap dung
