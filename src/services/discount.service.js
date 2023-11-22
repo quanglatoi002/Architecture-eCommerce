@@ -2,7 +2,6 @@
 
 const { BadRequestError, NotFoundError } = require("../core/error.response");
 const discount = require("../models/discount.model");
-const { Types } = require("mongoose");
 const { convertToObjectMongodb } = require("../utils");
 const { findAllProducts } = require("../models/repositories/product.repo");
 const {
