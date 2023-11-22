@@ -1,14 +1,15 @@
 "use strict";
 
 const { cart } = require("../models/cart.model");
-const { convertToObjectMongodb } = require("../utils");
-const { findAllProducts } = require("../models/repositories/product.repo");
+const {
+    findAllProducts,
+    getProductById,
+} = require("../models/repositories/product.repo");
 const {
     findAllDiscountCodesSelect,
     checkDiscountExists,
 } = require("../models/repositories/discount.repo");
-const { options } = require("../routes");
-const { update } = require("lodash");
+const { BadRequestError, NotFoundError } = require("../core/error.response");
 
 /*
     1 - add product to Cart [User]
@@ -69,6 +70,58 @@ class CartService {
 
         // gio hang ton tai, va co san phm nay thi update quantity
         return await CartService.updateUserCartQuantity({ userId, product });
+    }
+
+    //update cart
+    /*
+        shop_order_ids: [
+            {
+                shopId,
+                item_products: [
+                    {
+                        quantity,
+                        price,
+                        shopId,
+                        old_quantity,
+                        productId,
+                    }
+                ]
+                version
+            }
+        ]
+    */
+    static async addToCartV2({ userId, product = {} }) {
+        const { productId, quantity, old_quantity } =
+            shop_order_ids[0]?.item_product[0];
+        //check product
+        const fountProduct = await getProductById(productId);
+        if (!fountProduct) throw new NotFoundError("Product not exist");
+        if (fountProduct.product_shop.toString() !== shop_order_ids[0]?.shopId)
+            throw new NotFoundError("Product do not belong to the shop");
+        if (quantity === 0) {
+            //delete
+        }
+
+        return await CartService.updateUserCartQuantity({
+            userId,
+            product: {
+                productId,
+                quantity: quantity - old_quantity,
+            },
+        });
+    }
+
+    // user xóa sản phẩm trong cart của mình
+    static async deleteUserCart({ userId, productId }) {
+        const query = { cart_userId: userId, cart_state: "active" },
+            updateSet = {
+                $pull: {
+                    cart_products: {
+                        productId,
+                    },
+                },
+            };
+        const deleteCart = await cart.updateOne(query, updateSet);
     }
 }
 
