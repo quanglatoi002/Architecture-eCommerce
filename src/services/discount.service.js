@@ -6,7 +6,7 @@ const { Types } = require("mongoose");
 const { convertToObjectMongodb } = require("../utils");
 const { findAllProducts } = require("../models/repositories/product.repo");
 const {
-    findAllDiscountCodesUnSelect,
+    findAllDiscountCodesSelect,
     checkDiscountExists,
 } = require("../models/repositories/discount.repo");
 
@@ -18,6 +18,7 @@ class DiscountService {
             start_date,
             end_date,
             is_active,
+            users_used,
             shopId,
             min_order_value,
             product_ids,
@@ -30,15 +31,14 @@ class DiscountService {
             max_uses,
             uses_count,
             max_uses_per_user,
-            users_used,
         } = payload;
         //check
-        if (
-            new Date() < new Date(start_date) ||
-            new Date() > new Date(end_date)
-        ) {
-            throw new BadRequestError("Discount code has expired");
-        }
+        // if (
+        //     new Date() < new Date(start_date) ||
+        //     new Date() > new Date(end_date)
+        // ) {
+        //     throw new BadRequestError("Discount code has expired");
+        // }
 
         if (new Date(start_date) >= new Date(end_date))
             throw new BadRequestError("Start date must be before end date");
@@ -90,11 +90,11 @@ class DiscountService {
         const foundDiscount = await discount
             .findOne({
                 discount_code: code,
-                discount_shopId: convertToObjectMongodb(shopId),
+                discount_shopId: shopId,
             })
             .lean();
 
-        if (!foundDiscount && !foundDiscount.discount_is_active) {
+        if (foundDiscount && !foundDiscount.discount_is_active) {
             throw new NotFoundError("discount not exists");
         }
 
@@ -104,7 +104,7 @@ class DiscountService {
             //get all product
             products = await findAllProducts({
                 filter: {
-                    product_shop: convertToObjectMongodb(shopId),
+                    product_shop: shopId,
                     isPublished: true,
                 },
                 limit: +limit,
@@ -133,13 +133,14 @@ class DiscountService {
     // get all discount code of Shop
 
     static async getAllDiscountCodesByShop({ limit, page, shopId }) {
-        const discounts = await findAllDiscountCodesUnSelect({
+        const discounts = await findAllDiscountCodesSelect({
             limit: +limit,
             page: +page,
             filter: {
-                discount_shopId: convertToObjectMongodb(shopId),
+                discount_shopId: shopId,
+                discount_is_active: true,
             },
-            unSelect: ["__v", "discount_shopId"],
+            select: ["discount_code", "discount_name"],
             model: discount,
         });
 
@@ -169,7 +170,7 @@ class DiscountService {
             model: discount,
             filter: {
                 discount_code: codeId,
-                discount_shopId: convertToObjectMongodb(shopId),
+                discount_shopId: shopId,
             },
         });
 
@@ -180,6 +181,12 @@ class DiscountService {
             discount_max_uses,
             discount_min_order_value,
             discount_max_order_value,
+            discount_start_date,
+            discount_end_date,
+            discount_max_uses_per_user,
+            discount_users_used,
+            discount_type,
+            discount_value,
         } = foundDiscount;
         // nếu có nhưng discount để hết hạn thì ph chuyển tk false
         if (!discount_is_active) throw new NotFoundError(`discount expired`);
@@ -187,7 +194,7 @@ class DiscountService {
 
         if (
             new Date() < new Date(discount_start_date) ||
-            new Date() > new discount_end_date()
+            new Date() > new Date(discount_end_date)
         ) {
             throw new NotFoundError("discount code has expired");
         }
@@ -233,7 +240,7 @@ class DiscountService {
             model: discount,
             filter: {
                 discount_code: codeId,
-                discount_shopId: convertToObjectMongodb(shopId),
+                discount_shopId: shopId,
             },
         });
 
@@ -241,7 +248,7 @@ class DiscountService {
         // ko có thì xóa
         const deleted = await discount.findOneAndDelete({
             discount_code: codeId,
-            discount_shopId: convertToObjectMongodb(shopId),
+            discount_shopId: shopId,
         });
         return deleted;
     }
@@ -252,7 +259,7 @@ class DiscountService {
             model: discount,
             filter: {
                 discount_code: codeId,
-                discount_shopId: convertToObjectMongodb(shopId),
+                discount_shopId: shopId,
             },
         });
 
