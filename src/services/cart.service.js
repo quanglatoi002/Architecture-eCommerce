@@ -33,7 +33,7 @@ class CartService {
             options = { upsert: true, new: true };
 
         // addToSet chỉ khi tìm kiếm đúng với đk đề ra thì ms được thêm zo
-        return await cart.findByIdAndUpdate(query, updateOrInsert, options);
+        return await cart.findOneAndUpdate(query, updateOrInsert, options);
     }
 
     static async updateUserCartQuantity({ userId, product }) {
@@ -50,7 +50,7 @@ class CartService {
             },
             options = { upsert: true, new: true };
 
-        return await cart.findByIdAndUpdate(query, updateSet, options);
+        return await cart.findOneAndUpdate(query, updateSet, options);
     }
     /// END
 
@@ -90,9 +90,9 @@ class CartService {
             }
         ]
     */
-    static async addToCartV2({ userId, product = {} }) {
+    static async addToCartV2({ userId, shop_order_ids }) {
         const { productId, quantity, old_quantity } =
-            shop_order_ids[0]?.item_product[0];
+            shop_order_ids[0]?.item_products[0];
         //check product
         const fountProduct = await getProductById(productId);
         if (!fountProduct) throw new NotFoundError("Product not exist");
@@ -122,6 +122,15 @@ class CartService {
                 },
             };
         const deleteCart = await cart.updateOne(query, updateSet);
+        return deleteCart;
+    }
+
+    static async getListUserCart({ userId }) {
+        return await cart
+            .findOne({
+                cart_userId: +userId,
+            })
+            .lean();
     }
 }
 
