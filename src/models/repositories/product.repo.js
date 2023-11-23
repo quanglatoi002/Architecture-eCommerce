@@ -8,6 +8,7 @@ const {
     furniture,
 } = require("../product.model");
 const { getSelectData, unGetSelectData } = require("../../utils");
+const { get } = require("lodash");
 
 // nó đại diện cho cụm từ async await
 const findAllDraftsForShop = async ({ query, limit, skip }) => {
@@ -112,6 +113,21 @@ const queryProduct = async ({ query, limit, skip }) => {
 
 const getProductById = async (productId) => {
     return await product.findOne({ _id: productId }).lean();
+};
+
+const checkProductByServer = async (products) => {
+    return await Promise.all(
+        products.map(async (product) => {
+            const foundProduct = await getProductById(product.productId);
+            if (foundProduct) {
+                return {
+                    price: foundProduct.product_price,
+                    quantity: product.product_quantity,
+                    productId: product.productId,
+                };
+            }
+        })
+    );
 };
 
 module.exports = {
