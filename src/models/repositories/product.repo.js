@@ -140,4 +140,5 @@ module.exports = {
     findProduct,
     updateProductById,
     getProductById,
+    checkProductByServer,
 };
