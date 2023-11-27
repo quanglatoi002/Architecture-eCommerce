@@ -4,6 +4,7 @@ const { BadRequestError } = require("../core/error.response");
 const { findCartById } = require("../models/repositories/cart.repo");
 const { checkProductByServer } = require("../models/repositories/product.repo");
 const { getDiscountAmount } = require("./discount.service");
+const { acquireLock, releaseLock } = require("./redis.service");
 
 class CheckoutService {
     //login and without login
@@ -135,6 +136,46 @@ class CheckoutService {
             shop_order_ids_new,
             checkout_order,
         };
+    }
+
+    //order
+    static async orderByUser({
+        shop_order_ids_new,
+        cartId,
+        userId,
+        user_address = {},
+        user_payment = {},
+    }) {
+        const { shop_order_ids_new, checkout_order } =
+            await CheckoutService.checkoutReview({
+                cartId,
+                userId,
+                shop_order_ids: shop_order_ids_new,
+            });
+
+        //check lại 1 lần nữa xem có vượt hàng tồn kho hay ko?
+        //get new array Products
+        const products = shop_order_ids_new.flatMap(
+            (order) => order.item_products
+        );
+        const acquireProduct = [];
+        for (let i = 0; i < products.length; i++) {
+            const { productId, quantity } = products[i];
+            const keyLock = await acquireLock(productId, quantity, cartId);
+            acquireProduct.push(keyLock ? true : false);
+            if (keyLock) {
+                await releaseLock(keyLock);
+            }
+        }
+
+        //check if co 1 sp ht hang trong kho
+        if (acquireProduct.includes(false)) {
+            throw new BadRequestError(
+                "Một số products đã được cập nhật, vui lòng quay lại giỏ hàng..."
+            );
+        }
+        const newOrder = await order.create();
+        return newOrder;
     }
 }
 
