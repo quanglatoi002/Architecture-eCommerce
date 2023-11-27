@@ -3,6 +3,7 @@
 const { BadRequestError } = require("../core/error.response");
 const { findCartById } = require("../models/repositories/cart.repo");
 const { checkProductByServer } = require("../models/repositories/product.repo");
+const { getDiscountAmount } = require("./discount.service");
 
 class CheckoutService {
     //login and without login
@@ -64,7 +65,7 @@ class CheckoutService {
             cần ph check lại giá của sp tc khi đặc hàng và xem sp nó còn ở thời điểm hiện tại ko?
          */
         // tinh tong tien bill
-        for (let i = 0; i < shop_order_ids.length; i++) {
+        for (let i = 0; i < shop_order_ids?.length; i++) {
             const {
                 shopId,
                 shop_discounts = [],
@@ -84,13 +85,16 @@ class CheckoutService {
                 ]    
             */
 
-            if (!checkProductByServer[0])
+            if (!checkProductServer[0])
                 throw new BadRequestError("order wrong!!!");
             // sum cart
             // tính lại giá so với bạn đầu
+            console.log("checkProductServer", checkProductServer);
             const checkoutPrice = checkProductServer.reduce((acc, product) => {
                 return acc + product.quantity * product.price;
             }, 0);
+
+            console.log("checkout priceeeeeeee", checkoutPrice);
 
             // tong tien pre khi xử lý
             checkout_order.totalPrice = +checkoutPrice;

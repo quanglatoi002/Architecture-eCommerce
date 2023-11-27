@@ -116,13 +116,15 @@ const getProductById = async (productId) => {
 };
 
 const checkProductByServer = async (products) => {
+    console.log("bbbbbbbbbbb", products);
     return await Promise.all(
         products.map(async (product) => {
+            console.log("ccc", product);
             const foundProduct = await getProductById(product.productId);
             if (foundProduct) {
                 return {
                     price: foundProduct.product_price,
-                    quantity: product.product_quantity,
+                    quantity: product.quantity,
                     productId: product.productId,
                 };
             }
