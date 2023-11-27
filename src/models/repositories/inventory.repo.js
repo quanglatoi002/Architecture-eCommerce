@@ -15,6 +15,7 @@ const insertInventory = async ({
     });
 };
 
+// check xem hàng tồn kho có lớn hơn số lượng đặt hàng ko?
 const reservationInventory = async ({ productId, quantity, cartId }) => {
     const query = {
             invent_productId: productId,
@@ -34,7 +35,7 @@ const reservationInventory = async ({ productId, quantity, cartId }) => {
         },
         options = { upsert: true, new: true };
 
-    return await inventory.findByIdAndUpdate(query, updateSet, options);
+    return await inventory.updateOne(query, updateSet);
 };
 
 module.exports = {

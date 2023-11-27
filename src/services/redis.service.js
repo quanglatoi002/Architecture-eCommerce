@@ -1,16 +1,14 @@
 "use strict";
 
-const exp = require("constants");
-const { resolve } = require("path");
 const redis = require("redis");
-const { promisify } = require("util");
+const { promisify } = require("node:util");
 const {
     reservationInventory,
 } = require("../models/repositories/inventory.repo");
 const redisClient = redis.createClient();
 
-const pexpire = promisify(redisClient.pexpire).bind(redisClient);
-const setnxAsync = promisify(redisClient.setnx).bind(redisClient);
+const pexpire = promisify(redisClient.pExpire).bind(redisClient);
+const setnxAsync = promisify(redisClient.setNX).bind(redisClient);
 
 // khi mà user đang thanh toán thì giữ lại ko cho ngkac thanh toán nữa. Nếu mà có ng khác vào thì nó sẽ thử 10 lần(khóa lạc quan)
 const acquireLock = async (productId, quantity, cartId) => {
@@ -28,6 +26,7 @@ const acquireLock = async (productId, quantity, cartId) => {
                 quantity,
                 cartId,
             });
+            // result trả về của updateOne{NUMBER(modifiedCount), ...}
             if (isReservation.modifiedCount) {
                 await pexpire(key, expireTime);
                 return key;
