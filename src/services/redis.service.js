@@ -7,6 +7,13 @@ const {
 } = require("../models/repositories/inventory.repo");
 const redisClient = redis.createClient();
 
+// redisClient.ping((err, result) => {
+//     if (err) {
+//         console.log("Error connecting to Redis::", err);
+//     } else {
+//         console.log("Connected to Redis");
+//     }
+// });
 const pexpire = promisify(redisClient.pExpire).bind(redisClient);
 const setnxAsync = promisify(redisClient.setNX).bind(redisClient);
 
