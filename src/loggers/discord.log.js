@@ -44,6 +44,8 @@ class LoggerService {
                 },
             ],
         };
+
+        this.sendToMessage(codeMessage);
     }
 
     sendToMessage(message = "message") {

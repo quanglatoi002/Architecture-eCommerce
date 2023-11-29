@@ -1,21 +1,26 @@
 "use strict";
 
-const redis = require("redis");
+const { createClient } = require("redis");
 const { promisify } = require("node:util");
 const {
     reservationInventory,
 } = require("../models/repositories/inventory.repo");
-const redisClient = redis.createClient();
+const redisClient = createClient();
 
-// redisClient.ping((err, result) => {
-//     if (err) {
-//         console.log("Error connecting to Redis::", err);
-//     } else {
-//         console.log("Connected to Redis");
-//     }
+// redisClient.on("connect", () => {
+//     console.log("Connected to Redis");
 // });
-const pexpire = promisify(redisClient.pExpire).bind(redisClient);
-const setnxAsync = promisify(redisClient.setNX).bind(redisClient);
+
+redisClient.ping((err, result) => {
+    if (err) {
+        console.log("Error connecting to Redis::", err);
+    } else {
+        console.log("Connected to Redis");
+    }
+});
+
+const pexpire = promisify(redisClient.pexpire).bind(redisClient);
+const setnxAsync = promisify(redisClient.setnx).bind(redisClient);
 
 // khi mà user đang thanh toán thì giữ lại ko cho ngkac thanh toán nữa. Nếu mà có ng khác vào thì nó sẽ thử 10 lần(khóa lạc quan)
 const acquireLock = async (productId, quantity, cartId) => {
