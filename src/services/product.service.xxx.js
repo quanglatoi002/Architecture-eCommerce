@@ -17,16 +17,27 @@ const {
 
 */
 
+// Ở đây chúng ta đã biết có 3 đối tượng Clothing, Electronics, Furniture nhưng mà chúng ta không biết được đối tượng nào sẽ call để tạo ra cho nên chúng ta sẽ áp dụng PACTORY PATTERN như đúng định nghĩa của nó. ý2 Mục đích của pactory là định nghĩa(sử dụng static) ra 1 giao diện để tạo 1 đối tượng, nhưng việc tạo đối tượng này được xử lý bởi lớp các lớp.
+
+// ở phần create product sẽ áp dụng strategy và pactory
 class ProductFactory {
-    //strategy
+    //strategy sẽ tập hợp các các class con lại và đóng gói chúng và có thể thay đổi mà ko ảnh hưởng tới user
+    //begin strategy
     static productRegistry = {}; // key-class
 
+    //registerProductType(type, classRef) tk này sẽ nhận 2 tham số vd registerProductType("Electronics", Electronics(là 1 class))
     static registerProductType(type, classRef) {
         ProductFactory.productRegistry[type] = classRef;
+        // const a = {
+        //     Electronics: Electronics,
+        //     Clothing: Clothing,
+        // };
     }
-
+    //end
+    // sử dụng static để định nghĩa
     static async createProduct(type, payload) {
         const productClass = ProductFactory.productRegistry[type]; // lấy ra đc class dựa theo key
+        // khi mà nhập type đúng thì nó sẽ trả về value là Clothing mà Clothing lại là 1 class cho nên ở khúc cuối tôi đã dùng return new chứ không return
         if (!productClass)
             throw new BadRequestError(`Invalid Product Types ${type}`);
 
