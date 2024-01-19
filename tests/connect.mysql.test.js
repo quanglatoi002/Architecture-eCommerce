@@ -1,5 +1,5 @@
 const mysql = require("mysql2");
-const { Worker, isMainThread, workerData } = require("worker_threads");
+const workerData = require("worker_threads").workerData;
 
 const pool = mysql.createPool({
     host: "localhost",
@@ -9,15 +9,15 @@ const pool = mysql.createPool({
 });
 
 const batchSize = 100000;
-const totalSize = 10_000_000;
-let currentId = 1;
+let currentId = workerData.startId;
+const endId = workerData.endId;
 
 console.time(":::::TIMER:::::");
 
 const insertBatch = async () => {
     const values = [];
 
-    for (let i = 0; i < batchSize && currentId <= totalSize; i++) {
+    for (let i = 0; i < batchSize && currentId <= endId; i++) {
         const name = `name-${currentId}`;
         const age = currentId;
         const address = `address${currentId}`;
